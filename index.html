@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>عد تنازلي</title>
+  <title>عد تنازلي بالحب</title>
   <style>
     :root{--bg:#0f172a;--card:#0b1220;--accent:#60a5fa;--muted:#94a3b8}
     html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial}
@@ -12,7 +12,7 @@
     h1{margin:0 0 6px;font-size:20px}
     p.lead{margin:0 0 18px;color:var(--muted)}
     .timer{display:flex;gap:12px;justify-content:center;align-items:center}
-    .unit{background:rgba(0, 0, 0, 0.2);padding:14px 18px;border-radius:10px;min-width:84px}
+    .unit{background: rgba(0,0,0,0.4); padding:14px 18px; border-radius:10px; min-width:84px}
     .num{font-size:30px;font-weight:700;letter-spacing:0.6px}
     .label{font-size:12px;color:var(--muted);margin-top:6px}
     .small{font-size:12px;color:var(--muted);margin-top:10px}
@@ -28,7 +28,7 @@
   <canvas id="bgCanvas"></canvas>
 
   <div class="card" role="main">
-    <h1 id="title">الوقت المتبقي عشان ابوسك يا قمر القمرات</h1>
+    <h1 id="title">الوقت المتبقي عشان اشوفك يا قمر</h1>
     <p class="lead" id="subtitle">أحلى مسى على فخادك يا أم ياسين.</p>
 
     <div class="timer" aria-live="polite">
@@ -60,7 +60,7 @@
     <footer>الوقت المتبقي عشان اشوفك يا قمر</footer>
   </div>
 
-  <!-- موسيقى خلفية من الإنترنت -->
+  <!-- موسيقى خلفية -->
   <audio id="bgMusic" loop>
     <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
     متصفحك لا يدعم تشغيل الصوت.
@@ -68,9 +68,7 @@
 
 <script>
 (function(){
-  // التاريخ والوقت المستهدف
   const TARGET_ISO = "2025-12-11T19:30:00+02:00";
-
   const params = new URLSearchParams(location.search);
   const targetIso = params.get("target") || TARGET_ISO;
 
@@ -146,41 +144,53 @@
   update();
   const timer = setInterval(update,1000);
 
-  // ======== خلفية النجوم المتحركة + gradient ديناميكي ========
+  // ======== خلفية القلوب الحمراء المتحركة ========
   const canvas = document.getElementById('bgCanvas');
   const ctx = canvas.getContext('2d');
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 
-  const stars = [];
-  const numStars = 100;
-  for(let i=0;i<numStars;i++){
-    stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.5+0.5,speed:Math.random()*0.5+0.2});
+  const hearts = [];
+  const numHearts = 50;
+
+  for(let i=0;i<numHearts;i++){
+    hearts.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,size:Math.random()*20+10,speed:Math.random()*1+0.5});
   }
 
   window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
 
-  function animateStars(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    const now = new Date();
-    const diff = targetDate.getTime() - now.getTime();
-    let gradColor = `rgba(${Math.min(255, diff/1000)},${Math.min(255, diff/2000)},255,0.2)`;
-    ctx.fillStyle = gradColor;
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-
-    ctx.fillStyle='white';
-    stars.forEach(star=>{
-      ctx.beginPath();
-      ctx.arc(star.x,star.y,star.r,0,Math.PI*2);
-      ctx.fill();
-      star.y+=star.speed;
-      if(star.y>canvas.height) star.y=0;
-    });
-
-    requestAnimationFrame(animateStars);
+  function drawHeart(x,y,size){
+    ctx.save();
+    ctx.translate(x,y);
+    ctx.scale(size/20,size/20);
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.bezierCurveTo(0,-3, -3,-5, -5,-5);
+    ctx.bezierCurveTo(-10,-5, -10,2, -10,2);
+    ctx.bezierCurveTo(-10,7, -5,10, 0,15);
+    ctx.bezierCurveTo(5,10, 10,7, 10,2);
+    ctx.bezierCurveTo(10,2, 10,-5, 5,-5);
+    ctx.bezierCurveTo(3,-5,0,-3,0,0);
+    ctx.fillStyle = 'rgba(255,0,0,0.6)';
+    ctx.fill();
+    ctx.restore();
   }
 
-  animateStars();
+  function animateHearts(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle = 'rgba(0,0,0,0.1)';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    hearts.forEach(h=>{
+      drawHeart(h.x,h.y,h.size);
+      h.y -= h.speed;
+      if(h.y < -20) h.y = canvas.height + 20;
+    });
+
+    requestAnimationFrame(animateHearts);
+  }
+
+  animateHearts();
 
 })();
 </script>
