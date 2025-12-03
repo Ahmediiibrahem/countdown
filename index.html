@@ -7,8 +7,8 @@
   <style>
     :root{--bg:#0f172a;--card:#0b1220;--accent:#60a5fa;--muted:#94a3b8}
     html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial}
-    body{display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#071029 0%,#071025 100%);color:#edf2f7}
-    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:28px;border-radius:14px;box-shadow:0 8px 30px rgba(2,6,23,0.6);width:min(680px,94vw);text-align:center}
+    body{display:flex;align-items:center;justify-content:center;background:#071029;color:#edf2f7;overflow:hidden}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:28px;border-radius:14px;box-shadow:0 8px 30px rgba(2,6,23,0.6);width:min(680px,94vw);text-align:center;position:relative;z-index:2}
     h1{margin:0 0 6px;font-size:20px}
     p.lead{margin:0 0 18px;color:var(--muted)}
     .timer{display:flex;gap:12px;justify-content:center;align-items:center}
@@ -17,13 +17,16 @@
     .label{font-size:12px;color:var(--muted);margin-top:6px}
     .small{font-size:12px;color:var(--muted);margin-top:10px}
     footer{margin-top:14px;color:var(--muted);font-size:13px}
-    .controls{display:flex;gap:8px;justify-content:center;margin-top:14px}
+    .controls{display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap}
     .btn{border:0;padding:8px 12px;border-radius:8px;background:#0b2440;color:#fff;cursor:pointer}
     .btn.secondary{background:transparent;border:1px solid rgba(255,255,255,0.06)}
+    #bgCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;display:block}
     @media (max-width:420px){.unit{min-width:62px;padding:10px}}
   </style>
 </head>
 <body>
+  <canvas id="bgCanvas"></canvas>
+
   <div class="card" role="main">
     <h1 id="title">الوقت المتبقي عشان ابوسك يا قمر القمرات</h1>
     <p class="lead" id="subtitle">أحلى مسى على فخادك يا أم ياسين.</p>
@@ -65,6 +68,7 @@
 
 <script>
 (function(){
+  // التاريخ والوقت المستهدف
   const TARGET_ISO = "2025-12-11T19:30:00+02:00";
 
   const params = new URLSearchParams(location.search);
@@ -88,9 +92,8 @@
   };
 
   const bgMusic = document.getElementById('bgMusic');
-  document.body.addEventListener('click', () => { bgMusic.play().catch(()=>{}); }, { once: true });
   document.getElementById('toggleMusic').addEventListener('click', () => {
-    if(bgMusic.paused) bgMusic.play(); else bgMusic.pause();
+    if(bgMusic.paused) bgMusic.play().catch(()=>{}); else bgMusic.pause();
   });
 
   function pad(n){ return n<10 ? "0"+n : n; }
@@ -142,6 +145,43 @@
 
   update();
   const timer = setInterval(update,1000);
+
+  // ======== خلفية النجوم المتحركة + gradient ديناميكي ========
+  const canvas = document.getElementById('bgCanvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const stars = [];
+  const numStars = 100;
+  for(let i=0;i<numStars;i++){
+    stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.5+0.5,speed:Math.random()*0.5+0.2});
+  }
+
+  window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
+
+  function animateStars(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    const now = new Date();
+    const diff = targetDate.getTime() - now.getTime();
+    let gradColor = `rgba(${Math.min(255, diff/1000)},${Math.min(255, diff/2000)},255,0.2)`;
+    ctx.fillStyle = gradColor;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    ctx.fillStyle='white';
+    stars.forEach(star=>{
+      ctx.beginPath();
+      ctx.arc(star.x,star.y,star.r,0,Math.PI*2);
+      ctx.fill();
+      star.y+=star.speed;
+      if(star.y>canvas.height) star.y=0;
+    });
+
+    requestAnimationFrame(animateStars);
+  }
+
+  animateStars();
+
 })();
 </script>
 </body>
