@@ -50,43 +50,31 @@
     <div class="controls">
       <button class="btn" id="copyLink">نسخ رابط الصفحة</button>
       <button class="btn secondary" id="openNow">فتح الآن (عرض الوقت المحلي)</button>
+      <button class="btn secondary" id="toggleMusic">تشغيل/إيقاف الموسيقى</button>
     </div>
 
     <div class="small">التاريخ والوقت المستهدف: <span id="targetLabel"></span></div>
     <footer>الوقت المتبقي عشان اشوفك يا قمر</footer>
   </div>
 
+  <!-- موسيقى خلفية من الإنترنت -->
+  <audio id="bgMusic" loop>
+    <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+    متصفحك لا يدعم تشغيل الصوت.
+  </audio>
+
 <script>
 (function(){
-
   const TARGET_ISO = "2025-12-11T19:30:00+02:00";
 
   const params = new URLSearchParams(location.search);
   const targetIso = params.get("target") || TARGET_ISO;
 
   let targetDate = new Date(targetIso);
-
-  if (isNaN(targetDate)) {
-    try {
-      const match = targetIso.match(
-        /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})([+-]\d{2}):?(\d{2})$/
-      );
-      if (match) {
-        const base = match[1];
-        const offH = parseInt(match[2]);
-        const offM = parseInt(match[3]);
-        const utc = new Date(base);
-        utc.setHours(utc.getHours() - offH);
-        utc.setMinutes(utc.getMinutes() - offM);
-        targetDate = utc;
-      }
-    } catch {}
-  }
-
   const targetLabel = document.getElementById("targetLabel");
-  if (isNaN(targetDate)) {
-    targetLabel.textContent = "تنسيق غير صالح: " + targetIso;
-    return;
+  if (isNaN(targetDate)){
+    targetLabel.textContent = "تنسيق غير صالح: " + targetIso; 
+    return; 
   }
   targetLabel.textContent = targetDate.toUTCString();
 
@@ -99,19 +87,30 @@
     subtitle: document.getElementById("subtitle")
   };
 
-  function pad(n){ return n < 10 ? "0" + n : n; }
+  const bgMusic = document.getElementById('bgMusic');
+  document.body.addEventListener('click', () => { bgMusic.play().catch(()=>{}); }, { once: true });
+  document.getElementById('toggleMusic').addEventListener('click', () => {
+    if(bgMusic.paused) bgMusic.play(); else bgMusic.pause();
+  });
 
-  function update() {
+  function pad(n){ return n<10 ? "0"+n : n; }
+  function playEndSound() {
+    const endSound = new Audio('https://www.soundjay.com/button/beep-07.mp3');
+    endSound.play();
+  }
+
+  function update(){
     const now = new Date();
     const diff = targetDate.getTime() - now.getTime();
 
-    if (diff <= 0) {
+    if (diff <= 0){
       els.days.textContent = "0";
       els.hours.textContent = "00";
       els.minutes.textContent = "00";
       els.seconds.textContent = "00";
       els.title.textContent = "انتهى العد التنازلي";
       els.subtitle.textContent = "وصلنا للوقت المستهدف.";
+      playEndSound();
       clearInterval(timer);
       return;
     }
@@ -128,33 +127,22 @@
     els.seconds.textContent = pad(seconds);
   }
 
-  document.getElementById("copyLink").addEventListener("click", async () => {
-    try {
+  document.getElementById('copyLink').addEventListener('click', async ()=>{
+    try{
       const u = new URL(location.href);
-      if (!u.searchParams.get("target")) u.searchParams.set("target", targetIso);
+      if(!u.searchParams.get('target')) u.searchParams.set('target', targetIso);
       await navigator.clipboard.writeText(u.toString());
-      alert("تم نسخ الرابط إلى الحافظة");
-    } catch {
-      prompt("انسخ الرابط يدويًا:", location.href);
-    }
+      alert('تم نسخ الرابط إلى الحافظة');
+    }catch(e){ prompt('انسخ الرابط يدويًا:', location.href); }
   });
 
-  document.getElementById("openNow").addEventListener("click", () => {
-    alert(
-      "الوقت الآن (محلي): " + new Date().toString() +
-      "\nالهدف (UTC): " + targetDate.toUTCString()
-    );
+  document.getElementById('openNow').addEventListener('click', ()=>{
+    alert('الوقت الآن (محلي): ' + new Date().toString() + '\nالهدف (UTC): ' + targetDate.toUTCString());
   });
 
   update();
-  const timer = setInterval(update, 1000);
-
+  const timer = setInterval(update,1000);
 })();
 </script>
-  <audio id="bgMusic" loop>
-  <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
-  متصفحك لا يدعم تشغيل الصوت.
-</audio>
-
 </body>
 </html>
